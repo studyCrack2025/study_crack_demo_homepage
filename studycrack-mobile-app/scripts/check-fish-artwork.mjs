@@ -6,7 +6,7 @@ const [manifest, resolverSource, artworkSource, aquariumSource, plannerSource, a
   read('../src/assets/fishdex/v2/manifest.generated.json').then(JSON.parse),
   read('../src/features/gamification/fish-artwork.js'),
   read('../src/screens/aquarium/FishArtwork.jsx'),
-  read('../src/screens/aquarium/AquariumScreen.jsx'),
+  Promise.all(['AquariumScreen', 'FishCarePanel', 'FishInventoryPanel', 'FishDexPanel', 'DiscoveryPanel', 'AquariumSharePanel'].map(name => read(`../src/screens/aquarium/${name}.jsx`))).then(sources => sources.join('\n')),
   read('../src/screens/planner/PlannerScreen.jsx'),
   read('../src/styles/screens/aquarium.css'),
   read('../src/styles/screens/planner.css'),

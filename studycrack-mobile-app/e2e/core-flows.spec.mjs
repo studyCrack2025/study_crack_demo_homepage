@@ -686,6 +686,7 @@ test('85종 도감은 다섯 등급과 생태 분류를 탐색하고 화면 밖 
   expect(initiallyLoaded).toBeGreaterThan(0);
   expect(initiallyLoaded).toBeLessThan(85);
 
+  await page.getByRole('button', { name: /생태 분류 ·/ }).click();
   await page.getByRole('button', { name: '민물', exact: true }).click();
   await expect(page.locator('.aquarium-catalog-group article')).toHaveCount(17);
   await expect(page.locator('.aquarium-catalog-selection')).toContainText('민물');
