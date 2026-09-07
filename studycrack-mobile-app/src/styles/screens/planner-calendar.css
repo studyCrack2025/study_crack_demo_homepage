@@ -68,8 +68,8 @@
 .planner-calendar-plan-empty b{display:block;font-size:13px;color:var(--sc-ink);font-weight:950;}
 .planner-calendar-plan-empty small{display:block;margin-top:4px;font-size:11.5px;color:var(--sc-ink-muted);font-weight:800;}
 .planner-calendar-card{display:grid;gap:10px;padding:12px;border:1px solid var(--sc-border-subtle);border-radius:var(--sc-radius-card);background:var(--sc-surface);box-shadow:var(--sc-shadow-normal);}
-.planner-inline-calendar-toolbar{display:grid;grid-template-columns:minmax(104px,.42fr) minmax(0,1fr);align-items:center;gap:10px;}
-.planner-inline-segment{min-width:0;padding:3px;border-color:var(--sc-border-subtle);border-radius:var(--sc-radius-control);background:var(--sc-surface-muted);}
+.planner-inline-calendar-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;}
+.planner-inline-segment{min-width:104px;flex:1;padding:3px;border-color:var(--sc-border-subtle);border-radius:var(--sc-radius-control);background:var(--sc-surface-muted);}
 .planner-inline-segment button{height:var(--sc-touch-target);border-radius:9px;color:var(--sc-ink-muted);font-size:var(--sc-type-caption);font-weight:800;}
 .planner-inline-segment button.active{color:var(--sc-on-brand);box-shadow:var(--sc-shadow-normal);}
 .planner-inline-calendar-nav{display:flex;align-items:center;justify-content:flex-end;gap:4px;}

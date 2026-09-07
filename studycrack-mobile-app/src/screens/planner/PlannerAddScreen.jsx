@@ -44,7 +44,7 @@ export function PlannerAddScreen(ctx) {
             <section className="planner-add-hero">
               <span>선택 날짜</span>
               <h3>{dateLabel}</h3>
-              <p>하나씩 입력하면 오늘 계획에 깔끔하게 정리됩니다.</p>
+              <p>하나씩 입력하면 선택한 날짜의 계획에 정리됩니다.</p>
             </section>
 
             <div className="planner-step-progress" aria-label="계획 추가 단계">
@@ -60,7 +60,7 @@ export function PlannerAddScreen(ctx) {
               <div className="planner-add-card-head">
                 <div>
                   <b>공부할 시간</b>
-                  <small>실제 공부할 시간 범위를 입력해 주세요.</small>
+                  <small>계획할 시간 범위를 입력해 주세요. 실제 공부 기록과는 별개예요.</small>
                 </div>
                 <strong data-planner-duration-preview>{defaultMinutes}</strong>
               </div>
@@ -143,8 +143,10 @@ export function PlannerAddScreen(ctx) {
                   <small>계획 제목과 메모를 남길 수 있어요.</small>
                 </div>
               </div>
-              <input className="planner-input" data-field="plannerContent" placeholder="예: 영어 인강 시청" />
-              <textarea className="planner-input planner-memo-input" data-field="plannerMemo" placeholder="메모 선택 입력" rows="3" />
+              <label className="planner-add-field-label" htmlFor="planner-add-content">계획 제목</label>
+              <textarea id="planner-add-content" className="planner-input planner-memo-input" data-field="plannerContent" placeholder="예: 영어 인강 시청" rows="3" />
+              <label className="planner-add-field-label" htmlFor="planner-add-memo">메모 (선택)</label>
+              <textarea id="planner-add-memo" className="planner-input planner-memo-input" data-field="plannerMemo" placeholder="메모 선택 입력" rows="3" />
             </section>
 
             <div className="planner-add-footer">

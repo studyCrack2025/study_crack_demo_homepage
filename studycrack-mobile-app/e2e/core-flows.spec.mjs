@@ -447,7 +447,7 @@ test('타이머 미리보기에서 로컬 플래너 CRUD와 캘린더 재시도�
   const addedRow = page.locator('.planner-item-v2').filter({ hasText: '비문학 지문 3개 분석' });
   await expect(addedRow).toBeVisible();
   await addedRow.locator('.planner-item-main').click();
-  const editDialog = page.getByRole('dialog', { name: '선택 메뉴' });
+  const editDialog = page.getByRole('dialog', { name: '플래너 항목 수정' });
   await expect(editDialog).toBeVisible();
   const editContent = editDialog.locator('[data-field="plannerEditContent"]');
   await editContent.focus();

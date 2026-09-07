@@ -126,8 +126,8 @@ try {
   });
   check('planner edit preserves its dialog and fields', () => {
     const markup = render(PlannerEditSheet, { plannerEditIndex: 0, plannerEditItem: { subject: '수학', content: '기출 풀이' } });
-    assertSheetMarkup(markup, { ...plannerClasses, dismissAction: 'closePlannerEdit' });
-    assert.equal(attribute(markup.match(/<input\b[^>]*data-field="plannerEditContent"[^>]*>/)?.[0] || '', 'value'), '기출 풀이');
+    assertSheetMarkup(markup, { ...plannerClasses, panelClasses: ['planner-sheet', 'planner-edit-sheet'], ariaLabel: '플래너 항목 수정', dismissAction: 'closePlannerEdit' });
+    assert.match(markup, /<textarea\b[^>]*data-field="plannerEditContent"[^>]*>기출 풀이<\/textarea>/);
     assert.match(markup, /data-action="savePlannerEdit"/);
     assert.equal(render(PlannerEditSheet), '');
   });

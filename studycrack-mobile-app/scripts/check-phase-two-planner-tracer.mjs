@@ -44,7 +44,9 @@ assert.match(
   'planner tab keyboard navigation must move from the focused tab, not the previously selected tab'
 );
 assert.match(plannerCss, /\.planner-add-icon\{[^}]*width:var\(--sc-touch-target\);[^}]*height:var\(--sc-touch-target\)/, 'planner add must have a 44px target');
-assert.match(plannerCss, /\.planner-item-done,\.planner-item-remove\{[^}]*width:var\(--sc-touch-target\);[^}]*height:var\(--sc-touch-target\)/, 'planner row actions must have 44px targets');
+assert.match(plannerCss, /\.planner-item-done\{[^}]*width:var\(--sc-touch-target\);[^}]*height:var\(--sc-touch-target\)/, 'planner completion must have a 44px target');
+assert.match(plannerCss, /\.planner-item-remove\{[^}]*width:var\(--sc-touch-target\);[^}]*height:var\(--sc-touch-target\)/, 'planner deletion must have a 44px target');
+assert.match(plannerCss, /\.planner-item-done i\{[^}]*width:28px;[^}]*height:28px;/, 'completion artwork stays 28px within its hitbox');
 assert.match(plannerAddCss, /\.planner-choice-chip span\{[^}]*min-height:var\(--sc-touch-target\)/, 'planner choice chips must have 44px targets');
 assert.match(plannerCalendarCss, /\.planner-inline-segment button\{[^}]*height:var\(--sc-touch-target\)/, 'planner tabs must have 44px targets');
 assert.match(plannerCalendarCss, /\.calendar-sheet-head \.qna-modal-close,\.calendar-form-head \.qna-modal-close\{[^}]*width:var\(--sc-touch-target\);[^}]*height:var\(--sc-touch-target\)/, 'planner calendar close controls must have 44px targets');

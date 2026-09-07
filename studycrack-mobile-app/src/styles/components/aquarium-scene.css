@@ -65,6 +65,10 @@
 @keyframes aquariumBubble{from{transform:translateY(0);opacity:.2;}50%{opacity:.8;}to{transform:translateY(-180px);opacity:0;}}
 @keyframes aquariumPlant{from{transform:rotate(-4deg);}to{transform:rotate(5deg);}}
 @media (max-width:360px){.aquarium-scene{min-height:260px;}.aquarium-scene[data-scene-variant="share"]{min-height:220px;}}
-.aquarium-scene[data-scene-variant="home"],.aquarium-scene[data-scene-variant="guide"]{height:210px;min-height:210px;aspect-ratio:auto;}
+.aquarium-scene[data-scene-variant="home"]{height:96px;min-height:96px;aspect-ratio:auto;border-radius:12px;}
+.aquarium-scene[data-scene-variant="home"] .aquarium-fish{width:38px;}
+.aquarium-scene[data-scene-variant="home"] .aquarium-ground{height:14px;}
+.aquarium-scene[data-scene-variant="home"] .aquarium-plants{bottom:8px;transform:scaleY(.45);transform-origin:bottom;}
+.aquarium-scene[data-scene-variant="guide"]{height:210px;min-height:210px;aspect-ratio:auto;}
 /* Scene previews also honor reduced motion outside the full aquarium screen. */
 @media (prefers-reduced-motion:reduce){.aquarium-scene *{animation:none !important;transition:none !important;}}

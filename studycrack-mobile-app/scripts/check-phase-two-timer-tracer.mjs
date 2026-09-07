@@ -359,7 +359,11 @@ const [timerScreen, panels, screenContext, timerHandlers, timerStyles] = await P
   readFile(new URL('../src/styles/screens/timer.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(timerScreen, /<StudyJourneyPanel/, 'Timer must render the study journey owner.');
+assert.match(timerScreen, /<HomeDashboard/, 'Timer must delegate the home presentation.');
+const dashboard = await readFile(new URL('../src/screens/timer/HomeDashboard.jsx', import.meta.url), 'utf8');
+const sessionPanel = await readFile(new URL('../src/screens/timer/TimerSessionPanel.jsx', import.meta.url), 'utf8');
+assert.match(dashboard, /<TimerSessionPanel/, 'Home must render the timer panel.');
+assert.match(sessionPanel, /<StudyJourneyPanel/, 'The timer panel must preserve the study journey owner.');
 assert.match(timerScreen, /lastCompletedSession=\{lastCompletedSession\}/, 'Timer must pass the confirmed session summary to the journey.');
 assert.match(timerScreen, /rewardPendingSessionId=\{rewardPendingSessionId\}/, 'Timer controls must observe an unresolved reward before another study can start.');
 assert.match(panels, /buildTimerJourneyPresentation/, 'Study journey UI must consume the pure phase presentation.');

@@ -11,20 +11,20 @@ function PlannerItemCard({ item }) {
   const timeLabel = item.start && item.end && item.start !== '--:--' && item.end !== '--:--'
     ? `${item.start} - ${item.end}`
     : `${item.minutes}분`;
-  const detailLabel = [item.subject, item.detailSubject, item.activityType].filter(Boolean).join(' · ');
+  const detailLabel = [item.detailSubject, item.activityType].filter(Boolean).join(' · ');
+  const titleId = `planner-title-${encodeURIComponent(item.id)}`;
   return (
-    <article className={`planner-item planner-item-v2 ${item.done ? 'done' : ''}`} data-action="openPlannerEdit" data-planner-id={item.id}>
-      <span className={`planner-item-subject ${item.dot || 'etc'}`} aria-hidden="true"><i /></span>
-      <div className="planner-item-main">
-        <small className="planner-item-time">{timeLabel}</small>
-        <b>{item.content}</b>
-        <p>{detailLabel || '학습 계획'}</p>
-      </div>
+    <article className={`planner-item planner-item-v2 ${item.done ? 'done' : ''}`} data-planner-id={item.id}>
+      <button type="button" className="planner-item-done" data-action="togglePlannerDone" data-planner-id={item.id} aria-pressed={Boolean(item.done)} aria-describedby={titleId} aria-label={item.done ? '완료 취소' : '계획 완료'}><i aria-hidden="true">{item.done ? '✓' : ''}</i></button>
+      <button type="button" className="planner-item-main" data-action="openPlannerEdit" data-planner-id={item.id} aria-label="계획 편집" aria-describedby={titleId}>
+        <span className="planner-item-meta"><span className={`planner-item-subject ${item.dot || 'etc'}`}><i aria-hidden="true" />{item.subject || '기타'}</span><small className="planner-item-time">{timeLabel}</small></span>
+        <b id={titleId}>{item.content}</b>
+        {detailLabel ? <span className="planner-item-detail">{detailLabel}</span> : null}
+      </button>
       <div className="planner-item-actions">
         <span>{item.minutes}분</span>
         <div>
-          <button type="button" className="planner-item-done" data-action="togglePlannerDone" data-planner-id={item.id} aria-label={item.done ? '완료 취소' : '계획 완료'}><i aria-hidden="true">✓</i></button>
-          <button type="button" className="planner-item-remove" data-action="removePlannerItem" data-planner-id={item.id} aria-label="계획 삭제">×</button>
+          <button type="button" className="planner-item-remove" data-action="removePlannerItem" data-planner-id={item.id} aria-describedby={titleId} aria-label="계획 삭제">×</button>
         </div>
       </div>
     </article>
@@ -100,13 +100,13 @@ function PlannerMonthGrid({ plannerCalendarMonthCells = [] }) {
   );
 }
 
-function PlannerProgress({ presentation }) {
+function PlannerProgress({ presentation, isToday }) {
   const progressTone = presentation.remainingCount ? 'pending' : presentation.totalCount ? 'complete' : 'waiting';
   return (
     <section className="card planner-progress-card">
-      <div className="planner-progress-head"><div><span>오늘의 공부 진행률</span><h4 className="sc-metric">{presentation.completedCount}/{presentation.totalCount} <small>완료</small></h4></div><span className={`planner-progress-fish ${presentation.progress === 100 ? 'is-complete' : ''}`}><FishArtwork growthStage={presentation.progress === 100 ? 'adult' : 'young'} speciesId="clownfish" variant="grid" /></span></div>
+      <div className="planner-progress-head"><div><span>{isToday ? '오늘의 계획 진행률' : '선택한 날의 계획 진행률'}</span><h4 className="sc-metric">{presentation.completedCount}/{presentation.totalCount} <small>완료</small></h4></div><span className={`planner-progress-fish ${presentation.progress === 100 ? 'is-complete' : ''}`} aria-hidden="true"><FishArtwork growthStage={presentation.progress === 100 ? 'adult' : 'young'} speciesId="clownfish" variant="grid" /></span></div>
       <div className="progress planner-progress-track" role="progressbar" aria-label="플래너 완료율" aria-valuemin="0" aria-valuemax="100" aria-valuenow={presentation.progress}><i style={{ width: `${presentation.progress}%` }} /></div>
-      <div className="planner-progress-caption"><b className={progressTone}>{presentation.remainingCount ? `다음 계획까지 ${presentation.remainingCount}개 남았어요` : presentation.totalCount ? '오늘의 공부를 모두 끝냈어요' : '계획을 추가하면 진행률을 확인할 수 있어요'}</b><span>{presentation.completedDurationLabel} / {presentation.totalDurationLabel}</span></div>
+      <div className="planner-progress-caption"><b className={progressTone}>{presentation.remainingCount ? `계획 ${presentation.remainingCount}개가 남았어요` : presentation.totalCount ? '선택한 날의 계획을 모두 완료했어요' : '계획을 추가하면 진행률을 확인할 수 있어요'}</b><span>완료 계획 {presentation.completedDurationLabel} / 전체 {presentation.totalDurationLabel}</span></div>
     </section>
   );
 }
@@ -159,9 +159,9 @@ export function PlannerScreen(ctx) {
       overlays={plannerOverlayOpen ? <>{plannerEditIndex !== null ? <PlannerEditSheet plannerEditIndex={plannerEditIndex} plannerEditItem={plannerEditItem} /> : null}{calendarSheetOpen || calendarEventFormOpen ? <AdmissionCalendarSheet {...ctx} /> : null}</> : null}
     >
           <main className={`planner-screen ${plannerViewItems.length ? '' : 'planner-empty-state-screen'}`}>
-            <PrimaryScreenHeader className="planner-context-head" eyebrow={[normalizedTargetMajor || '목표 대학 설정', calendarNearestDdayLabel].filter(Boolean).join(' · ')} title="오늘의 플래너" description="계획은 이 기기에 저장되고, 공부 기록은 완료 확인 뒤 반영돼요." />
+            <PrimaryScreenHeader className="planner-context-head" eyebrow={[normalizedTargetMajor || '목표 대학 설정', calendarNearestDdayLabel].filter(Boolean).join(' · ')} title={isToday ? '오늘의 플래너' : '선택한 날의 플래너'} description="계획은 이 기기에 저장되고, 공부 기록은 완료 확인 뒤 반영돼요." />
 
-            <PlannerProgress presentation={presentation} />
+            <PlannerProgress presentation={presentation} isToday={isToday} />
 
             <section className="planner-tasks-section">
               <div className="planner-section-head"><div><span>{plannerMonthLabel} {selectedPlannerDate}일 · {selectedPlannerWeekday}요일</span><h4>{planHeading}</h4></div><button type="button" className="planner-add-icon" data-action="openPlannerAddPage" aria-label="계획 추가">+</button></div>
@@ -174,6 +174,8 @@ export function PlannerScreen(ctx) {
                 <button type="button" className="planner-add-cta" data-action="openPlannerAddPage">{selectedPlannerDate}일 계획 추가</button>
               </div>
             </section>
+
+            <PlannerFeedback plannerFeedback={plannerFeedback} hasItems={Boolean(plannerViewItems.length)} />
 
             <section className="planner-calendar-section">
               <div className="planner-section-head"><div><span>&#xC77C;&#xC815; &#xD0D0;&#xC0C9;</span><h4>&#xB2E4;&#xB978; &#xB0A0;&#xC9DC; &#xBCF4;&#xAE30;</h4></div><button type="button" className="planner-admission-trigger" data-action="openCalendarSheet">&#xC218;&#xD5D8; &#xC77C;&#xC815;</button></div>
@@ -194,7 +196,6 @@ export function PlannerScreen(ctx) {
               </div>
             </section>
 
-            <PlannerFeedback plannerFeedback={plannerFeedback} hasItems={Boolean(plannerViewItems.length)} />
           </main>
     </AppScreenShell>
   );
