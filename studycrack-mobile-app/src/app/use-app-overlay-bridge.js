@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 
-export function useAppOverlayBridge({ registry, setState, state }) {
+export function useAppOverlayBridge({ registry, setState, state, myPresentation }) {
   const dismiss = useCallback(() => setState({ drawerOpen: false }), [setState]);
   const eligible = state.screen === 'timer' && state.userLoadStatus === 'ready';
   useEffect(() => {
@@ -13,12 +13,7 @@ export function useAppOverlayBridge({ registry, setState, state }) {
     dismiss,
     props: {
       drawerOpen: open,
-      user: state.user,
-      selectedPlan: state.selectedPlan,
-      gameProfile: state.gameProfile,
-      gameProfileStatus: state.gameProfileStatus,
-      studySummary: state.studySummary,
-      studySummaryStatus: state.studySummaryStatus
+      myPresentation
     }
   };
 }

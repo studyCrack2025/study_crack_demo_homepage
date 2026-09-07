@@ -19,7 +19,7 @@ const [modalCss, sheetCss, plannerCalendarCss, authSource, analysisSource, appSc
   readFile(new URL('../src/components/Sheet.jsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/useOverlayDialog.js', import.meta.url), 'utf8'),
   readFile(new URL('../src/shared/browser/overlay-focus.js', import.meta.url), 'utf8'),
-  readFile(new URL('../src/screens/mypage/ProfileDrawer.jsx', import.meta.url), 'utf8'),
+  readFile(new URL('../src/screens/mypage/MySummarySheet.jsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/TermsModal.jsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/components/MbtiModal.jsx', import.meta.url), 'utf8'),
   readFile(new URL('../src/screens/mypage/ProfileOverlays.jsx', import.meta.url), 'utf8'),
@@ -52,8 +52,8 @@ assert.match(overlayHook, /trapOverlayFocus/);
 assert.match(overlayHook, /restoreOverlayFocus/);
 assert.match(overlayBrowser, /FOCUSABLE_SELECTOR/);
 assert.match(overlayBrowser, /requestAnimationFrame/);
-assert.match(profileDrawer, /useOverlayDialog/);
-assert.match(profileDrawer, /aria-label="프로필 메뉴" tabIndex=\{-1\}/);
+assert.match(profileDrawer, /<Sheet open=\{drawerOpen\} dismissAction="closeDrawer"/);
+assert.match(profileDrawer, /ariaLabel="프로필 메뉴"/);
 assert.match(termsComponent, /sc-modal-head terms-modal-head/);
 assert.match(termsComponent, /sc-modal-body terms-modal-body/);
 assert.match(mbtiComponent, /panelClass="mbti-survey-modal"/);

@@ -409,6 +409,7 @@ test('플래너는 오늘 할 일 뒤에서 기존 주·월 일정을 탐색한�
 });
 
 test('타이머 미리보기에서 로컬 플래너 CRUD와 캘린더 재시도까지 이어진다', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-09-06T03:00:00Z'));
   await installAuthenticatedSession(page);
   const api = await installApiMock(page, { failOnceTypes: ['get_admission_calendar'] });
   await page.setViewportSize({ width: 320, height: 700 });
@@ -820,7 +821,7 @@ test('MY 계정·알림·지원 흐름은 실제 구독과 수신 계약을 유�
   await profileDialog.getByRole('button', { name: '닫기' }).click();
 
   await page.goto('/studycrack-mobile.html?screen=accountInfo');
-  expect(await page.locator('[data-screen="accountInfo"]').evaluate((element) => getComputedStyle(element).animationName)).toBe('mobileScreenEnter');
+  await expect(page.locator('[data-screen="accountInfo"]')).toHaveCSS('animation-name', 'mobileScreenEnter');
   await expect(page.locator('.account-subscription-card')).toContainText('다음 결제 안내');
   await expect(page.locator('.mobile-social-row')).toHaveCount(2);
   await expect(page.locator('.account-danger-utility')).toBeVisible();
@@ -946,7 +947,7 @@ test('잠긴 PRO 기능에서 플랜 선택과 웹 결제 조건이 이어진다
   await expect(page.locator('.plan-console-term')).toContainText('웹 결제는 4주 단위');
   await expect(page.locator('[data-action="selectDuration"][data-duration="8주"]')).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: '웹 결제로 계속하기' }).click();
-  await page.waitForURL(/\/payment\?/);
+  await page.waitForURL(/\/payment\?/, { waitUntil: 'domcontentloaded' });
   const paymentUrl = new URL(page.url());
   expect(paymentUrl.searchParams.get('source')).toBe('mobile_app');
   expect(paymentUrl.searchParams.get('plan')).toBe('pro');

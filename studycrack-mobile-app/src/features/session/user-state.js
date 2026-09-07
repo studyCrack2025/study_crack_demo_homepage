@@ -8,6 +8,12 @@ import { normalizeTargetUnivSlots, targetSlotsToList } from '../analysis/target-
 
 export function createUserDataResetPatch() {
   return {
+    streakSummary: { open: false, returnTarget: '' },
+    gameProfile: null,
+    gameProfileStatus: 'idle',
+    habitatDays: [],
+    habitatStatus: 'idle',
+    habitatError: '',
     user: { ...EMPTY_USER },
     userTier: '',
     selectedPlan: '',

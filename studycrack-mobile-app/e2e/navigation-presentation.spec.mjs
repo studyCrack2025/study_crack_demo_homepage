@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { installApiMock, installAuthenticatedSession, expectNoHorizontalOverflow } from './support/mock-api.mjs';
 
+test.use({ deviceScaleFactor: 1 });
+
 const viewports = [
   { width: 320, height: 700 },
   { width: 360, height: 800 },
@@ -47,6 +49,17 @@ for (const viewport of viewports) {
     expect(idleStyle.height).toBe('48px');
     await expect(aquarium.locator('.tabbar-label')).toHaveCSS('color', 'rgb(99, 112, 131)');
     await expect(nav).toHaveCSS('height', '72px');
+    await expect(icon).toHaveCSS('border-top-width', '2px');
+    await expect(icon).toHaveCSS('border-radius', '16px');
+    await expect(icon).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -9)');
+    await expect(icon.locator('svg')).toHaveCSS('width', '21px');
+    await expect(icon.locator('svg')).toHaveCSS('stroke-width', '1.75px');
+    await expect(icon.locator('svg path').first()).toHaveAttribute('d', 'M3 20h18M5 20V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12');
+    await expect(home.locator('svg')).toHaveCSS('stroke-width', '2.15px');
+    await expect(home.locator('.tabbar-label')).toHaveCSS('font-weight', '700');
+    await expect(aquarium.locator('.tabbar-label')).toHaveCSS('font-weight', '500');
+    await expect(aquarium.locator('.tabbar-label')).toHaveCSS('font-size', '10px');
+    await expect(nav.getByRole('button', { name: '학습 코칭', exact: true })).toHaveText('코칭');
     for (const endpoint of idleStyle.background.match(/rgb\([^)]+\)/g)) expect(contrast(idleStyle.stroke, endpoint)).toBeGreaterThanOrEqual(3);
     expect(contrast(idleStyle.color, 'rgb(247, 249, 252)')).toBeGreaterThanOrEqual(4.5);
     await page.screenshot({ path: testInfo.outputPath('home-navigation.png'), animations: 'disabled' });
@@ -57,6 +70,10 @@ for (const viewport of viewports) {
     expect(activeStyle.stroke).toBe('rgb(255, 255, 255)');
     expect(activeStyle.width).toBe('48px');
     expect(activeStyle.height).toBe('48px');
+    await expect(icon).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -9)');
+    await expect(icon.locator('svg')).toHaveCSS('stroke-width', '2.15px');
+    await expect(home.locator('svg')).toHaveCSS('stroke-width', '1.75px');
+    await expect(aquarium.locator('.tabbar-label')).toHaveCSS('font-weight', '700');
     await expect(aquarium.locator('.tabbar-label')).toHaveCSS('color', 'rgb(10, 86, 178)');
     for (const endpoint of activeStyle.background.match(/rgb\([^)]+\)/g)) expect(contrast(activeStyle.stroke, endpoint)).toBeGreaterThanOrEqual(3);
     expect(contrast('rgb(10, 86, 178)', 'rgb(247, 249, 252)')).toBeGreaterThanOrEqual(4.5);

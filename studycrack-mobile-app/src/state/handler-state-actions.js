@@ -2,6 +2,7 @@ import { APP_STATE_FIELD_KINDS, APP_STATE_FIELD_OWNERS, selectAppStateField } fr
 
 export const HANDLER_STATE_FIELDS = Object.freeze({
   navigation: Object.freeze([]),
+  productGuide: Object.freeze([]),
   auth: Object.freeze([
     'authError', 'authSubmitting', 'findEmailModalOpen', 'foundEmailMasked', 'openTermsType',
     'resetPasswordEmail', 'resetPasswordModalOpen', 'resetPasswordSending', 'resetPasswordStep',
@@ -35,6 +36,7 @@ export const HANDLER_STATE_FIELDS = Object.freeze({
     'withdrawPassword', 'withdrawSubmitting'
   ]),
   service: Object.freeze([
+    'streakSummary',
     'notiRefreshTick', 'qnaRefreshTick', 'reportsRefreshTick',
     'analysisSearchOpen', 'checkoutPlan', 'coachingDropReasons', 'coachingExamFiles',
     'coachingExamScores', 'coachingExamType', 'coachingPlannerFiles', 'coachingSheetOpen',

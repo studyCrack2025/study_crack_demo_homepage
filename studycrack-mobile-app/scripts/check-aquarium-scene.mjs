@@ -1,0 +1,102 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { createServer } from 'vite';
+import { aquariumCollectionLabel, aquariumShareText, buildAquariumPresentation, normalizeAquariumSlots } from '../src/features/gamification/aquarium-presentation.js';
+
+const first = Object.freeze({ fishId: 'fish-1', speciesId: 'clownfish', name: '친구', growthStage: 'growing' });
+const second = Object.freeze({ ...first, fishId: 'fish-2' });
+const third = Object.freeze({ ...first, fishId: 'fish-3', speciesId: 'retired' });
+const input = Object.freeze({
+  activeFish: Object.freeze([first, second, third, { ...first, fishId: 'fish-4' }]),
+  fishInventory: Object.freeze([first, second, third]), fishCount: 3,
+  gameProfile: Object.freeze({ streakDays: 12, updatedAt: '2026-09-06T03:00:00Z' }), gameProfileStatus: 'ready',
+  fishCatalog: Object.freeze([{ speciesId: 'clownfish' }, { speciesId: 'blue_damsel' }, { speciesId: 'blue_damsel' }, { speciesId: 'retired', status: 'legacy' }]), fishCatalogStatus: 'ready',
+  todayPlannerItems: Object.freeze([{ date: '2026-09-06', done: true }, { date: '2026-09-06', done: false }])
+});
+const snapshot = buildAquariumPresentation(input);
+assert.equal(snapshot.ownedCount, 3);
+assert.equal(snapshot.activeCount, 3);
+assert.deepEqual(snapshot.collection, { status: 'ready', collected: 1, total: 2, percent: 50 });
+assert.equal(snapshot.planner.percent, 50);
+assert.equal(snapshot.planner.date, '2026-09-06');
+assert.equal(snapshot.streakDays, 12);
+assert.equal(snapshot.asOf, input.gameProfile.updatedAt);
+assert.equal(aquariumCollectionLabel(snapshot), '1 / 2종');
+assert.match(aquariumShareText(snapshot), /물고기 1\/2종 · 연속 학습 12일/);
+assert.equal(snapshot.backgroundKey, 'legacy');
+assert.ok(Object.isFrozen(snapshot) && Object.isFrozen(snapshot.slots) && Object.isFrozen(snapshot.slots[0]) && Object.isFrozen(snapshot.collection));
+assert.notEqual(snapshot.slots[0], first);
+assert.deepEqual(normalizeAquariumSlots([first, first, second, third]).map(fish => fish?.fishId || null), ['fish-1', null, 'fish-2']);
+assert.deepEqual(normalizeAquariumSlots(null), [null, null, null]);
+assert.deepEqual(normalizeAquariumSlots([{}, { fishId: '', speciesId: 'a' }, { fishId: 'a' }]), [null, null, null]);
+for (const status of ['idle', 'loading', 'error', 'unavailable']) {
+  const unknown = buildAquariumPresentation({ ...input, gameProfileStatus: status, fishCatalogStatus: status });
+  assert.equal(unknown.status, status);
+  assert.equal(unknown.streakDays, null);
+  assert.equal(unknown.activeCount, null);
+  assert.equal(unknown.ownedCount, null);
+  assert.equal(unknown.collection.total, null);
+  assert.doesNotMatch(aquariumShareText(unknown), /0일|\/12종|0마리/);
+}
+for (const value of [null, undefined, '', false, -1, NaN, Infinity]) {
+  assert.equal(buildAquariumPresentation({ ...input, gameProfile: { streakDays: value } }).streakDays, null);
+}
+const empty = buildAquariumPresentation({ ...input, activeFish: [], fishInventory: [], fishCatalog: [], fishCount: 0, gameProfile: { streakDays: 0 }, todayPlannerItems: [] });
+assert.equal(empty.streakDays, 0);
+assert.equal(empty.ownedCount, 0);
+assert.equal(empty.collection.total, 0);
+assert.equal(empty.collection.percent, null);
+assert.equal(empty.planner.percent, null);
+assert.match(aquariumShareText(empty), /물고기 0\/0종 · 연속 학습 0일/);
+assert.equal(buildAquariumPresentation({ ...input, fishCatalog: undefined }).collection.total, null);
+assert.equal(buildAquariumPresentation({ ...input, todayPlannerItems: undefined }).planner.status, 'unknown');
+assert.equal(buildAquariumPresentation({ ...input, todayPlannerItems: [{ date: '2026-09-05' }, { date: '2026-09-06' }] }).planner.status, 'date-mismatch');
+
+const vite = await createServer({ root: fileURLToPath(new URL('..', import.meta.url)), appType: 'custom', logLevel: 'silent', server: { middlewareMode: true, hmr: false } });
+try {
+  const { AquariumScene } = await vite.ssrLoadModule('/src/components/aquarium/AquariumScene.jsx');
+  const render = props => renderToStaticMarkup(createElement(AquariumScene, props));
+  const props = { slots: snapshot.slots, catalog: input.fishCatalog, stats: snapshot, selectedFishId: 'fish-1' };
+  const full = render(props);
+  assert.equal((full.match(/<button /g) || []).length, 3);
+  assert.equal((full.match(/data-action="selectAquariumFish"/g) || []).length, 3);
+  assert.match(full, /12일/);
+  assert.match(full, /1\/2/);
+  assert.match(full, /is-selected/);
+  for (const variant of ['home', 'guide', 'share', 'untrusted']) {
+    const markup = render({ ...props, variant });
+    assert.doesNotMatch(markup, /<button|data-action|aquarium-fish-name|is-selected/);
+    assert.equal((markup.match(/role="img"/g) || []).length, 3);
+    assert.match(markup, new RegExp(`data-scene-variant="${variant === 'untrusted' ? 'home' : variant}"`));
+    if (variant === 'share') assert.match(markup, /12일/);
+    else assert.doesNotMatch(markup, /aquarium-scene-hud/);
+  }
+  assert.doesNotMatch(render({ slots: [], variant: 'share' }), /0日|0일|0\/0/);
+  const injected = [];
+  render({ slots: [{ ...first, assetKey: 'fishdex-045-percula-clownfish' }], catalog: [{ speciesId: first.speciesId, motionProfile: 'bad', colors: ['url(https://invalid.example)', '#FFF'] }], renderFish: props => { injected.push(props); return null; } });
+  assert.equal(injected.length, 1);
+  assert.equal(injected[0].assetKey, 'fishdex-045-percula-clownfish');
+  assert.equal(injected[0].colors, undefined);
+  assert.match(render({ slots: [first], catalog: [{ speciesId: first.speciesId, motionProfile: 'bad' }] }), /data-motion="short-loop"/);
+} finally {
+  await vite.close();
+}
+
+const read = path => readFile(new URL(path, import.meta.url), 'utf8');
+const [sceneSource, screenSource, sceneCss, screenCss, tokenCss] = await Promise.all([
+  read('../src/components/aquarium/AquariumScene.jsx'), read('../src/screens/aquarium/AquariumScreen.jsx'),
+  read('../src/styles/components/aquarium-scene.css'), read('../src/styles/screens/aquarium.css'), read('../src/styles/foundation/tokens.css')
+]);
+assert.doesNotMatch(sceneSource, /\bfetch\(|localStorage|sessionStorage|Math\.random|Date\.now|backgroundImage|url\(/);
+assert.doesNotMatch(screenSource, /function AquariumScene\(/);
+for (const selector of ['.aquarium-scene{', '.aquarium-fish-path{', '@keyframes aquariumFishPath']) {
+  assert.ok(sceneCss.includes(selector));
+  assert.ok(!screenCss.includes(selector));
+}
+assert.match(tokenCss, /--sc-radius-card:16px;--sc-radius-scene:24px;/);
+assert.match(sceneCss, /prefers-reduced-motion:reduce/);
+assert.match(sceneCss, /animation:none !important;transition:none !important/);
+console.log('Aquarium scene contracts passed: three slots, read-only previews, shared known/unknown statistics, collection sets, local dates, artwork guards and deferred CSS ownership.');

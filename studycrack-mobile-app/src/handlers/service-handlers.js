@@ -230,6 +230,23 @@ export function createServiceHandlers(ctx) {
       return true;
     },
 
+    openStreakSummary() {
+      if (ctx.userLoadStatus !== 'ready' || !ctx.hasClientSession?.() || !['timer', 'my'].includes(ctx.screen) || ctx.productGuideUi?.open) return false;
+      preserveScrollAfterStateChange(() => {
+        ctx.setStreakSummary({ open: true, returnTarget: ctx.drawerOpen ? 'summary' : '' });
+        setDrawerOpen(false);
+      });
+      return true;
+    },
+
+    closeStreakSummary() {
+      preserveScrollAfterStateChange(() => {
+        ctx.setStreakSummary({ open: false, returnTarget: '' });
+        if (ctx.streakSummary?.returnTarget === 'summary' && ctx.screen === 'timer' && ctx.userLoadStatus === 'ready' && ctx.hasClientSession?.()) setDrawerOpen(true);
+      });
+      return true;
+    },
+
     closeDrawer({ actionEl, isOverlaySelfClick }) {
       if (!isOverlaySelfClick && actionEl?.classList?.contains?.('drawer-overlay')) return false;
       preserveScrollAfterStateChange(() => setDrawerOpen(false));

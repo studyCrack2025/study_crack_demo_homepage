@@ -66,7 +66,7 @@ test('웹 결제 이관은 서버 결제 의도를 만들고 콜백에 불투명
   await page.route('**/checkout', async (route) => {
     await route.fulfill({ status: 302, headers: { location: '/checkout.html' } });
   });
-  await page.goto('/payment.html?plan=standard');
+  await page.goto('/payment.html?plan=standard', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#checkoutPlanName')).toHaveText('STANDARD');
   await expect(page.locator('#phone')).toHaveValue('010-1234-5678');
   const alerts = [];

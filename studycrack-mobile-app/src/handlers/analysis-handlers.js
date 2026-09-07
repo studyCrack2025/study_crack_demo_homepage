@@ -257,6 +257,7 @@ export function createAnalysisHandlers(ctx) {
     },
 
     async confirmTargetDelete() {
+      if (ctx.isCurrentProfile && !ctx.isCurrentProfile()) return false;
       if (ctx.targetDeleteSaving) return true;
       const major = ctx.targetDeleteCandidate;
       if (!major) return false;
@@ -277,12 +278,14 @@ export function createAnalysisHandlers(ctx) {
       setTargetDeleteSaving(true);
       setTargetDeleteError('');
       const result = await persistTargetUnivs(nextTargets, nextSlots);
-      if (result && result.ok === false) {
+      if (ctx.isCurrentProfile && !ctx.isCurrentProfile()) return false;
+      if (result?.ok !== true) {
         setTargetDeleteSaving(false);
-        setTargetDeleteError(result.error || '목표 대학 저장에 실패했습니다.');
+        setTargetDeleteError(result?.error || '목표 대학 저장에 실패했습니다.');
         return false;
       }
       setTargetUnivSlots(nextSlots);
+      if (result?.ok === true) ctx.applySavedProfileTarget?.(nextTargets[0]);
       setAnalysisTargetList(nextAnalysis);
       if (ctx.targetMajor === major) {
         resetAnalysisCalculation();

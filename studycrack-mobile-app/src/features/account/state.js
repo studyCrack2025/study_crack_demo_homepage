@@ -4,6 +4,7 @@ import { createFeatureSlice } from '../../state/create-feature-slice.js';
 export function createAccountInitialState() {
   return {
     serverResource: {
+      productGuide: null,
       selectedPlan: '',
       personalEvents: [],
       calendarSyncStatus: 'idle'

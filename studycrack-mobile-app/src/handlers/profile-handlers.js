@@ -3,6 +3,7 @@ import { convertExamScores } from '../features/analysis/api.js';
 import { scoreExamTypeToKey } from '../features/analysis/score-model.js';
 import { MBTI_QUESTIONS, computeMbtiCode } from '../constants/mbti.js';
 import { getData } from './action-utils.js';
+import { withOperationLock } from '../shared/async/operation-lock.js';
 
 const MBTI_QUESTION_COUNT = MBTI_QUESTIONS.length;
 const KAKAO_SUPPORT_URL = 'https://pf.kakao.com/_wxjxcgn';
@@ -441,6 +442,22 @@ export function createProfileHandlers(ctx) {
     return result;
   }
 
+  async function saveConfirmedQualitative(qualitative, onSaved) {
+    return withOperationLock(ctx.operationLocksRef, 'profile-qualitative', async () => {
+      let result;
+      try { result = await persistQualitative(qualitative); } catch { result = { ok: false }; }
+      if (ctx.isCurrentProfile && !ctx.isCurrentProfile()) return false;
+      if (result?.ok !== true) {
+        alert('학습 정보를 저장하지 못했어요. 입력은 유지되니 다시 시도해주세요.');
+        return false;
+      }
+      setUser(prev => ({ ...prev, qualitative }));
+      persistUser({ ...ctx, localStorage: storage }, { qualitative });
+      onSaved?.();
+      return true;
+    });
+  }
+
   return {
     setRankingPeriod({ actionEl }) {
       const period = getData(actionEl, 'ranking-period');
@@ -515,9 +532,11 @@ export function createProfileHandlers(ctx) {
           ...(ctx.user?.quantitative || {}),
           [examKey]: converted.data
         };
+        if (ctx.isCurrentProfile && !ctx.isCurrentProfile()) return false;
         const result = await persistQuantitative(nextQuantitative);
-        if (result && result.ok === false) {
-          alert(result.error || '성적 저장에 실패했습니다.');
+        if (ctx.isCurrentProfile && !ctx.isCurrentProfile()) return false;
+        if (result?.ok !== true) {
+          alert(result?.error || '성적 저장에 실패했습니다.');
           return false;
         }
 
@@ -555,14 +574,8 @@ export function createProfileHandlers(ctx) {
         return false;
       }
       if (shouldReadOb1FromDom(ctx)) syncIOSSafariQualDomState(ctx, values);
-      const qualitative = buildQualitative(values);
-      setUser((prev) => ({ ...prev, qualitative }));
-      persistUser({ ...ctx, localStorage: storage }, { qualitative });
-      const result = await persistQualitative(qualitative);
-      if (result && result.ok === false) {
-        alert(result.error || '정성조사서 저장에 실패했습니다.');
-        return false;
-      }
+      const qualitative = { ...(ctx.user?.qualitative || {}), ...buildQualitative(values) };
+      if (!await saveConfirmedQualitative(qualitative)) return false;
       if (ctx.screen === 'ob1') {
         goto?.('ob2');
         return true;
@@ -634,9 +647,11 @@ export function createProfileHandlers(ctx) {
           return false;
         }
         const nextQuantitative = { ...(ctx.user?.quantitative || {}), [examKey]: converted.data };
+        if (ctx.isCurrentProfile && !ctx.isCurrentProfile()) return false;
         const result = await persistQuantitative(nextQuantitative);
-        if (result && result.ok === false) {
-          alert(result.error || '성적 저장에 실패했습니다.');
+        if (ctx.isCurrentProfile && !ctx.isCurrentProfile()) return false;
+        if (result?.ok !== true) {
+          alert(result?.error || '성적 저장에 실패했습니다.');
           return false;
         }
         const nextKo = converted.data.kor.raw;
@@ -1038,7 +1053,7 @@ export function createProfileHandlers(ctx) {
       return true;
     },
 
-    mbtiNext() {
+    async mbtiNext() {
       const step = Number(ctx.mbtiStep);
       const answers = Array.isArray(ctx.mbtiAnswers) ? ctx.mbtiAnswers : [];
       if (!answers[step]) return false;
@@ -1046,17 +1061,12 @@ export function createProfileHandlers(ctx) {
         setMbtiStep(step + 1);
         return true;
       }
-      // 마지막 문항 → 코드 산출·저장·결과 표시.
       const code = computeMbtiCode(answers);
-      setMbtiResult(code);
-      setMbtiStep('result');
       const nextQualitative = { ...(ctx.user?.qualitative || {}), mbti: code };
-      setUser((prevUser) => ({ ...prevUser, qualitative: nextQualitative }));
-      persistUser({ ...ctx, localStorage: storage }, { qualitative: nextQualitative });
-      Promise.resolve()
-        .then(() => persistQualitative(nextQualitative))
-        .catch(() => {});
-      return true;
+      return saveConfirmedQualitative(nextQualitative, () => {
+        setMbtiResult(code);
+        setMbtiStep('result');
+      });
     },
 
     async confirmLogout() {

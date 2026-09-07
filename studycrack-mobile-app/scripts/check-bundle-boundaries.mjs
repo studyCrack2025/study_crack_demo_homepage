@@ -48,8 +48,16 @@ const initialModules = new Set(
     .flatMap((chunk) => Object.keys(chunk.modules))
 );
 const deferredModuleSuffixes = [
+  '/src/components/StudyOverviewCard.jsx',
+  '/src/features/study/overview-presentation.js',
+  '/src/app/presentation-context.js',
+  '/src/components/aquarium/AquariumScene.jsx',
+  '/src/screens/aquarium/FishArtwork.jsx',
+  '/src/features/gamification/fish-artwork.js',
   '/src/app/AppOverlayHost.jsx',
-  '/src/screens/mypage/ProfileDrawer.jsx',
+  '/src/screens/mypage/MySummarySheet.jsx',
+  '/src/screens/mypage/MySummaryContent.jsx',
+  '/src/features/account/profile-presentation.js',
   '/src/screens/analysis/AnalysisScreen.jsx',
   '/src/screens/coaching/CoachingScreen.jsx',
   '/src/screens/mypage/MyPageScreen.jsx',
@@ -74,6 +82,12 @@ assert.doesNotMatch(bootstrapCss, /\.primary-screen-header\b/, 'signed-in primar
 assert.doesNotMatch(bootstrapCss, /\.my-profile-avatar\b/, 'mypage feature CSS must not return to the bootstrap asset');
 assert.match(deferredCss, /\.primary-screen-header\b/, 'deferred CSS must include the shared signed-in primary header');
 assert.match(deferredCss, /\.my-profile-avatar\b/, 'deferred CSS must include mypage feature styles');
+assert.doesNotMatch(bootstrapCss, /\.aquarium-scene\{/, 'shared aquarium scene CSS must stay deferred');
+assert.match(deferredCss, /\.aquarium-scene\{/, 'deferred CSS must include the shared aquarium scene');
+for (const motion of ['bottomSheetIn']) {
+  assert.doesNotMatch(bootstrapCss, new RegExp(`@keyframes ${motion}\\{`), `${motion} must stay with its deferred surface owner`);
+  assert.match(deferredCss, new RegExp(`@keyframes ${motion}\\{`), `${motion} must load with its deferred surface`);
+}
 assert.ok(
   appRegistryChunk.viteMetadata?.importedCss?.has(deferredCssAsset.fileName),
   'signed-in app chunk metadata must preload its deferred CSS asset'

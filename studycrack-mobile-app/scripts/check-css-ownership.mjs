@@ -24,8 +24,12 @@ const expectedBootstrapStyles = new Set([
   'screens/onboarding.css'
 ]);
 const expectedDeferredStyles = new Set([
+  'components/streak-summary.css',
+  'screens/product-guide.css',
+  'components/aquarium-scene.css',
+  'components/study-overview.css',
   'components/primary-screen-header.css',
-  'components/drawers.css',
+  'components/my-summary.css',
   'components/navigation.css',
   'components/sheets.css',
   'screens/analysis-base.css',

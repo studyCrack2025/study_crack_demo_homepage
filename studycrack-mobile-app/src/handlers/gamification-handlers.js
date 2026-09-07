@@ -40,12 +40,10 @@ function aquariumBusy(status) {
 }
 
 function aquariumSharePayload(ctx) {
-  const fishCount = Math.max(0, Number(ctx.fishCount) || 0);
-  const streakDays = Math.max(0, Number(ctx.gameProfile?.streakDays) || 0);
   const baseUrl = `${globalThis.location?.origin || ''}/studycrack-mobile.html`;
   return {
     title: 'StudyCrack 공부 수조',
-    text: `공부로 키운 나의 수조: 물고기 ${fishCount}/12종 · 연속 학습 ${streakDays}일`,
+    text: ctx.aquariumShareText || '공부로 키운 나의 수조',
     url: baseUrl
   };
 }

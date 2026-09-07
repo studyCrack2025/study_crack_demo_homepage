@@ -9,7 +9,7 @@
 .planner-progress-fish .aquarium-fish-svg,.planner-progress-fish .aquarium-fish-artwork{width:48px;filter:drop-shadow(0 4px 5px color-mix(in srgb,var(--sc-brand-navy-deep) 16%,transparent));transition:transform var(--sc-motion-panel) var(--ease-enter);}
 .planner-progress-fish.is-complete .aquarium-fish-svg,.planner-progress-fish.is-complete .aquarium-fish-artwork{transform:scale(var(--fish-scale,1)) translateX(2px);}
 .planner-progress-track{height:7px;overflow:hidden;border-radius:var(--sc-radius-pill);background:var(--sc-line-subtle);}
-.planner-progress-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--sc-brand-navy),var(--sc-action-positive));transition:width var(--sc-motion-panel) ease;}
+.planner-progress-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--sc-brand-navy),var(--sc-action-positive));transition:width var(--sc-motion-progress) var(--ease-enter);}
 .planner-progress-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .planner-progress-caption b{min-width:0;color:var(--sc-action-positive-strong);font-size:var(--sc-type-micro);font-weight:800;line-height:1.35;}
 .planner-progress-caption b.waiting{color:var(--sc-ink-muted);}

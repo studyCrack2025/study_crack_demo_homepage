@@ -5,11 +5,12 @@ function IntroScreen({ activeDot, children, description, nextLabel = '다음', n
   return (
     <AppFrame><AppContent screen={screen}>
       <div className="onboarding-shot">
+        <button type="button" className="onboarding-skip" data-action="finishIntro">건너뛰기</button>
         <div className="onboarding-shot-head"><span className="onboarding-kicker">STUDYCRACK STRATEGY</span><h2>{title}</h2><p>{description}</p></div>
         <div className="onboarding-center">{children}</div>
         <img src={CRACKY_SRC} className={`onboarding-character ${screen}`} alt="크랙이" />
         <div className="onboarding-shot-dots">{[0, 1, 2].map((index) => <i className={activeDot === index ? 'active' : ''} key={index} />)}</div>
-        <button type="button" className="onboarding-next" data-action="goto" data-target={nextTarget}>{nextLabel}</button>
+        <button type="button" className="onboarding-next" data-action={nextTarget === 'authLogin' ? 'finishIntro' : 'goto'} data-target={nextTarget}>{nextLabel}</button>
       </div>
     </AppContent></AppFrame>
   );

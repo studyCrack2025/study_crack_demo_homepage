@@ -21,10 +21,10 @@ function subjectTone(subject = '') {
   return 'other';
 }
 
-export function StudyWeekSummary({ activeSubject = '', liveSeconds = 0, summary = null, status = 'idle' }) {
+export function StudyWeekSummary({ overview, summary = null, status = 'idle' }) {
   const [selectedDate, setSelectedDate] = useState('');
   if (status === 'loading' && !summary) return <div className="timer-week-loading" role="status"><i /><span>이번 주 공부 흐름을 정리하고 있어요.</span></div>;
-  if (!summary?.week?.days?.length || status === 'error' || status === 'unavailable') {
+  if (!summary?.week?.days?.length || overview?.week.seconds == null) {
     return (
       <div className="timer-week-empty">
         <span>{status === 'error' ? '공부 요약을 잠시 불러오지 못했어요.' : '공부를 완료하면 주간 흐름이 이곳에 쌓여요.'}</span>
@@ -32,23 +32,18 @@ export function StudyWeekSummary({ activeSubject = '', liveSeconds = 0, summary 
       </div>
     );
   }
-  const currentLive = Math.max(0, Number(liveSeconds) || 0);
   const todayDate = summary.today?.date || '';
   const days = summary.week.days.map((day) => {
     const subjects = (day.subjects || []).map((row) => ({ ...row, seconds: Number(row.seconds) || 0 }));
-    if (day.date === todayDate && activeSubject && currentLive) {
-      const activeIndex = subjects.findIndex((row) => row.subject === activeSubject);
-      if (activeIndex >= 0) subjects[activeIndex] = { ...subjects[activeIndex], seconds: subjects[activeIndex].seconds + currentLive };
-      else subjects.push({ subject: activeSubject, seconds: currentLive });
-    }
-    return { ...day, subjects, totalSeconds: (Number(day.totalSeconds) || 0) + (day.date === todayDate ? currentLive : 0) };
+    return { ...day, subjects, totalSeconds: Number(day.totalSeconds) || 0 };
   });
   const maxSeconds = Math.max(1, ...days.map((day) => day.totalSeconds));
   const selectedDay = days.find((day) => day.date === selectedDate) || days.find((day) => day.date === todayDate) || days[days.length - 1];
   const selectedSubjects = [...(selectedDay?.subjects || [])].filter((row) => row.seconds > 0).sort((left, right) => right.seconds - left.seconds);
   return (
     <div className="timer-week-summary">
-      <div className="timer-week-summary-head"><span>이번 주 누적</span><b>{exactDurationLabel((Number(summary.week.totalSeconds) || 0) + currentLive)}</b></div>
+      <div className="timer-week-summary-head"><span>이번 주 확정 누적</span><b>{exactDurationLabel(overview.week.seconds)}</b></div>
+      {!overview.week.fresh ? <p className="timer-session-empty">마지막 확인 기록이에요. 최신 상태는 위 학습 요약에서 다시 확인해주세요.</p> : null}
       <div className="timer-week-chart" aria-label="이번 주 일별 공부 시간">
         {days.map((day, index) => (
           <button type="button" className={`timer-week-day ${day.date === todayDate ? 'is-today' : ''} ${day.date === selectedDay?.date ? 'is-selected' : ''}`} onClick={() => setSelectedDate(day.date)} aria-label={`${STUDY_WEEK_LABELS[index]}요일 ${exactDurationLabel(day.totalSeconds)}`} key={day.date}>

@@ -20,6 +20,7 @@ export const SCREEN_CONTEXT_KEYS = Object.freeze({
   ]),
   analysis: Object.freeze(ANALYSIS_CONTEXT_KEYS),
   aquarium: Object.freeze([
+    'aquariumPresentation', 'studyOverview',
     'activeFish', 'aquariumActionError', 'aquariumActionStatus', 'aquariumResult',
     'aquariumDrawRevealStep', 'aquariumMode', 'aquariumSelectedFishId', 'aquariumStarterSpeciesId', 'dimmed', 'fishCatalog',
     'fishCatalogError', 'fishCatalogStatus', 'fishCount', 'fishInventory', 'gameProfile',
@@ -44,6 +45,7 @@ export const SCREEN_CONTEXT_KEYS = Object.freeze({
     'lockedFeatureLabel', 'lockedFeatureTarget', 'lockedFeatureTier', 'tab', 'upgradePromptTarget', 'upgradePromptTier'
   ]),
   my: Object.freeze([
+    'myPresentation',
     'dimmed', 'mbtiAnswers', 'mbtiModalOpen', 'mbtiResult', 'mbtiStep', 'plannerItems',
     'profileDetailModalOpen', 'profilePhotoUploading', 'selectedPlan', 'studyRecords',
     'studyTimerRunning', 'studyTimerSecondsRef', 'tab', 'user'
@@ -98,12 +100,14 @@ export const SCREEN_CONTEXT_KEYS = Object.freeze({
   settingsTermsPicker: Object.freeze(['openTermsType', 'termsContent']),
   splash: Object.freeze(['crackyHiSrc', 'studycrackLogoSrc']),
   strategy: Object.freeze([
+    'studyOverview',
     'coachingAnswers', 'coachingDropReasons', 'coachingExamFiles', 'coachingExamScores',
     'coachingExamType', 'coachingPlannerFiles', 'coachingSheetOpen', 'coachingStep',
     'coachingSubjectRows', 'coachingSubmitting', 'coachingTrend', 'coachingView', 'dimmed',
     'tab', 'weeklyReports', 'weeklyReportsError', 'weeklyReportsStatus'
   ]),
   timer: Object.freeze([
+    'studyOverview', 'aquariumPresentation',
     'activeStudySession', 'analysisScoreView', 'calendarNearestDdayLabel', 'calendarNearestEvent', 'canAccessBasic', 'completionError', 'dimmed', 'fishCount', 'formatHms',
     'gameProfile', 'gameProfileStatus', 'gameRules', 'gameRulesOpen', 'hasClientSession', 'lastCompletedSession',
     'normalizedTargetMajor', 'plannedScheduleOptions', 'rewardPendingSessionId', 'rewardResult', 'studySessionDetailsOpen', 'studyStartDraft', 'studySubjectSheetOnlyPlanned',

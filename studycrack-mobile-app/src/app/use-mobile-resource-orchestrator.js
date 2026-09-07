@@ -57,14 +57,14 @@ export function useMobileResourceOrchestrator({ api, setState, state, stateRef }
     setState
   });
   useGameProfileResource({
-    enabled: resourceSessionReady && ['timer', 'aquarium'].includes(state.screen),
+    enabled: resourceSessionReady && ['timer', 'aquarium', 'my'].includes(state.screen),
     getApiBinding: api.getGameApiBinding,
     includeCatalog: state.screen === 'aquarium',
     refreshTick: state.gameRefreshTick,
     setState
   });
   useStudySummaryResource({
-    enabled: resourceSessionReady && ['timer'].includes(state.screen),
+    enabled: resourceSessionReady && ['timer', 'aquarium', 'strategy', 'my'].includes(state.screen),
     getApiBinding: api.getUserApiBinding,
     refreshTick: state.studySummaryRefreshTick,
     setState

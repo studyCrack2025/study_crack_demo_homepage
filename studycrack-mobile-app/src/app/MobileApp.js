@@ -55,12 +55,12 @@ export function MobileApp() {
   const plannerCustomMinutesRef = useRef('');
   const qnaDraftRef = useRef({ title: '', content: '' });
   const operationLocksRef = useRef(new Set());
+  const productGuideActionsRef = useRef(null);
   stateRef.current = state;
   rootStateRef.current = rootState;
   useAppStatePersistence(rootState);
 
   const deferredScreens = useDeferredScreenRegistry(state.screen);
-  const appOverlay = useAppOverlayBridge({ registry: deferredScreens.registry, setState, state });
   const handlerStateActions = useMemo(
     () => createHandlerStateActions({ setState, getRootState: () => rootStateRef.current }),
     [setState]
@@ -89,14 +89,16 @@ export function MobileApp() {
 
   const viewContext = createMobileViewContext({
     api,
+    buildPresentations: deferredScreens.registry?.buildAppPresentations,
     beforeGoto,
     nav,
-    refs: { operationLocksRef, plannerContentRef, plannerCustomMinutesRef, qnaDraftRef },
+    refs: { operationLocksRef, plannerContentRef, plannerCustomMinutesRef, qnaDraftRef, productGuideActionsRef },
     retryUserLoad,
     setState,
     state,
     stateRef
   });
+  const appOverlay = useAppOverlayBridge({ registry: deferredScreens.registry, setState, state, myPresentation: viewContext.myPresentation });
   const contextRef = useRef({ ...state, ...viewContext });
   contextRef.current = { ...state, ...viewContext };
   const events = useMemo(
@@ -124,7 +126,8 @@ export function MobileApp() {
     onChange,
     onBlur
   };
-  const renderWithOverlays = (content) => React.createElement(AppOverlayContext.Provider, { value: appOverlay }, React.createElement('div', wrapperProps, content));
+  const OverlayProvider = deferredScreens.registry?.AppOverlayProvider || AppOverlayContext.Provider;
+  const renderWithOverlays = (content) => React.createElement(OverlayProvider, { value: appOverlay, ...(deferredScreens.registry?.AppOverlayProvider ? { guide: { api, state, setState, nav, actionsRef: productGuideActionsRef, presentation: { profile: viewContext.myPresentation?.profile, aquarium: viewContext.aquariumPresentation, tasks: viewContext.todayPlannerItems, catalog: state.fishCatalog, streak: viewContext.streakPresentation } } } : {}) }, React.createElement('div', wrapperProps, content));
 
   if (isDeferredAppScreen(state.screen) && !deferredScreens.registry) {
     return renderWithOverlays(

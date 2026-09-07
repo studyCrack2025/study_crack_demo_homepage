@@ -8,6 +8,7 @@ import { expireMobileSessionSilently } from '../features/session/mobile-session-
 import { hasMobileClientSession, markMobileAppBooted } from '../shared/browser/mobile-runtime.js';
 import { mobileInteractions } from '../shared/browser/mobile-interactions.js';
 import { attachVisualViewportMetrics } from '../shared/browser/visual-viewport.js';
+import { hasSeenIntro } from '../features/session/intro-storage.js';
 
 const { useCallback, useEffect, useLayoutEffect, useRef, useState } = React;
 
@@ -69,7 +70,7 @@ export function useMobileAppEffects({ events, nav, setState, state } = {}) {
 
   useEffect(() => {
     if (state.screen !== 'splash') return undefined;
-    const destination = hasMobileClientSession() ? 'timer' : 'on1';
+    const destination = hasMobileClientSession() ? 'timer' : hasSeenIntro() ? 'authLogin' : 'on1';
     const timer = globalThis.setTimeout?.(() => nav.goto(destination, false), 900);
     return () => {
       if (timer) globalThis.clearTimeout?.(timer);

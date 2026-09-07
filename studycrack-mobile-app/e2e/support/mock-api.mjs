@@ -152,7 +152,7 @@ function responseFor(payload, state) {
         me: { rank: 1, seconds: state.studySeconds }
       };
     case 'get_study_summary':
-      return studySummary(state);
+      return state.studySummaryOverride || studySummary(state);
     case 'get_univ_list_only':
       return [
         { univName: '고려대학교', majors: ['경영학과', '정치외교학과'] },
@@ -349,6 +349,8 @@ export async function installApiMock(page, {
 } = {}) {
   const requests = [];
   const failedOnce = new Set();
+  // Keep fixture activity out of third-party analytics and their load lifecycle.
+  await page.route(/^https:\/\/(?:[^/]+\.)?(?:googletagmanager\.com|google-analytics\.com|analytics\.google\.com|doubleclick\.net|clarity\.ms|facebook\.net|facebook\.com)\//, route => route.abort());
   const state = {
     activeStudySession: null,
     completedStudySessions: new Map(),
