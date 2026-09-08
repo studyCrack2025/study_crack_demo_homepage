@@ -48,7 +48,7 @@ export function buildAquariumPresentation({ activeFish, fishCatalog, fishCatalog
   return Object.freeze({
     status: gameProfileStatus, catalogStatus: fishCatalogStatus,
     asOf: typeof gameProfile?.updatedAt === 'string' ? gameProfile.updatedAt : null,
-    slots, backgroundKey: 'legacy',
+    slots, backgroundKey: 'day1',
     ownedCount: ready ? count(fishCount) : null,
     activeCount: ready ? slots.filter(Boolean).length : null,
     streakDays: ready ? count(gameProfile.streakDays) : null,

@@ -57,7 +57,14 @@ for (const [width, height] of [[320, 700], [360, 800], [390, 844], [430, 932]]) 
       expect(box.y).toBeGreaterThanOrEqual(0);
       expect(box.y + box.height).toBeLessThanOrEqual(height);
       if (step === 2) await expect(dialog).toContainText('독서');
-      if (step === 3) await expect(dialog.getByRole('region', { name: '사용법 수조 미리보기' })).toBeVisible();
+      if (step === 3) {
+        const scene = dialog.getByRole('region', { name: '사용법 수조 미리보기' });
+        await expect(scene).toBeVisible();
+        await expect(scene).toHaveAttribute('data-background-key', 'day1');
+        await expect(scene.locator('.aquarium-background-layer')).toHaveAttribute('data-background-status', 'ready');
+        await expect(scene).toHaveCSS('height', '210px');
+        await expect(scene.locator('button')).toHaveCount(0);
+      }
       if (step === 4) await expect(dialog).toContainText('7일 연속 학습');
       await page.screenshot({ path: testInfo.outputPath(`guide-${width}-${step}.png`), animations: 'disabled' });
       await expectNoHorizontalOverflow(page);

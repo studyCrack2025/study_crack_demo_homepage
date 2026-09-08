@@ -26,7 +26,14 @@ assert.equal(snapshot.streakDays, 12);
 assert.equal(snapshot.asOf, input.gameProfile.updatedAt);
 assert.equal(aquariumCollectionLabel(snapshot), '1 / 2종');
 assert.match(aquariumShareText(snapshot), /물고기 1\/2종 · 연속 학습 12일/);
-assert.equal(snapshot.backgroundKey, 'legacy');
+for (const total of [12, 85]) {
+  const catalog = Array.from({ length: total }, (_, index) => ({ speciesId: `species-${index}`, owned: index === 0 }));
+  const result = buildAquariumPresentation({ ...input, fishCatalog: catalog });
+  assert.equal(aquariumCollectionLabel(result), `1 / ${total}종`);
+  assert.equal(aquariumShareText(result), `공부로 키운 나의 수조: 물고기 1/${total}종 · 연속 학습 12일`);
+}
+assert.equal(snapshot.backgroundKey, 'day1');
+for (const streakDays of [0, 7, 15, 30, 50, 100, 200]) assert.equal(buildAquariumPresentation({ ...input, gameProfile: { streakDays, backgroundKey: 'day100' } }).backgroundKey, 'day1');
 assert.ok(Object.isFrozen(snapshot) && Object.isFrozen(snapshot.slots) && Object.isFrozen(snapshot.slots[0]) && Object.isFrozen(snapshot.collection));
 assert.notEqual(snapshot.slots[0], first);
 assert.deepEqual(normalizeAquariumSlots([first, first, second, third]).map(fish => fish?.fishId || null), ['fish-1', null, 'fish-2']);
@@ -58,6 +65,22 @@ assert.equal(buildAquariumPresentation({ ...input, todayPlannerItems: [{ date: '
 const vite = await createServer({ root: fileURLToPath(new URL('..', import.meta.url)), appType: 'custom', logLevel: 'silent', server: { middlewareMode: true, hmr: false } });
 try {
   const { AquariumScene } = await vite.ssrLoadModule('/src/components/aquarium/AquariumScene.jsx');
+  const { AquariumScreen } = await vite.ssrLoadModule('/src/screens/aquarium/AquariumScreen.jsx');
+  for (const gameProfileStatus of ['idle', 'loading']) {
+    const screen = renderToStaticMarkup(createElement(AquariumScreen, { gameProfileStatus }));
+    assert.doesNotMatch(screen, /class="aquarium-scene-background"/, 'do not mount a transient image before the profile is ready');
+    assert.match(screen, /수조를 채우고 있어요/);
+  }
+  const { aquariumBackground } = await vite.ssrLoadModule('/src/components/aquarium/aquarium-backgrounds.js');
+  for (const key of ['day1', 'day7', 'day15', 'day30', 'day50', 'day100']) {
+    const asset = aquariumBackground(key);
+    assert.equal(asset.key, key);
+    assert.equal(asset.height, 502);
+    assert.equal(asset.width, key === 'day100' ? 376 : 377);
+    assert.ok(Object.isFrozen(asset));
+    assert.match(asset.src, /day-\d+\.png/);
+  }
+  for (const key of ['day200', 'https://invalid.example/background.png', '__proto__', null, {}, 100]) assert.equal(aquariumBackground(key).key, 'day1');
   const render = props => renderToStaticMarkup(createElement(AquariumScene, props));
   const props = { slots: snapshot.slots, catalog: input.fishCatalog, stats: snapshot, selectedFishId: 'fish-1' };
   const full = render(props);
@@ -66,6 +89,9 @@ try {
   assert.match(full, /12일/);
   assert.match(full, /1\/2/);
   assert.match(full, /is-selected/);
+  assert.match(full, /data-background-key="day1"/);
+  assert.equal((full.match(/class="aquarium-scene-background"/g) || []).length, 1);
+  assert.doesNotMatch(full, /aquarium-(plants|ground|bubbles|rays|water-line)/);
   for (const variant of ['home', 'guide', 'share', 'untrusted']) {
     const markup = render({ ...props, variant });
     assert.doesNotMatch(markup, /<button|data-action|aquarium-fish-name|is-selected/);

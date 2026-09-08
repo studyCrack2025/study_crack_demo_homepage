@@ -540,6 +540,7 @@ test('수조에서 첫 물고기의 성장·이름·배치 상태를 관리하�
     button.click();
   });
   await expect(page.getByText('EXP +10')).toBeVisible();
+  await page.locator('.aquarium-management > summary').click();
   await page.locator('[data-field="aquariumFishName"]').fill('마루별');
   await page.locator('[data-action="saveAquariumFishName"]').click();
   await expect(page.getByRole('heading', { name: '마루별', exact: true })).toBeVisible();
@@ -577,7 +578,7 @@ test('수조 보조 정보 실패는 본체를 가리지 않고 해당 정보만
   await expect.poll(() => api.requests.filter(({ payload }) => payload.type === 'get_fish_catalog').length).toBeGreaterThanOrEqual(2);
 });
 
-test('물고기 뽑기는 미확인 결과를 복구하고 세 번 공개한 뒤 도감에 반영한다', async ({ page }, testInfo) => {
+test('물고기 뽑기는 확정 결과를 바로 표시하고 미확인 결과를 복구해 도감에 반영한다', async ({ page }, testInfo) => {
   await installAuthenticatedSession(page);
   await page.addInitScript(() => {
     window.__aquariumSharePayloads = [];
@@ -596,17 +597,13 @@ test('물고기 뽑기는 미확인 결과를 복구하고 세 번 공개한 뒤
     button.click();
     button.click();
   });
-  await expect(page.getByRole('button', { name: '상자 열기 1단계' })).toBeVisible();
-  await page.getByRole('button', { name: '상자 열기 1단계' }).click();
+  await expect(page.getByRole('dialog', { name: '물고기 발견 결과' })).toBeVisible();
 
   await page.reload();
-  await expect(page.getByRole('button', { name: '상자 열기 1단계' })).toBeVisible();
-  await page.getByRole('button', { name: '상자 열기 1단계' }).click();
-  await page.getByRole('button', { name: '상자 열기 2단계' }).click();
-  await page.getByRole('button', { name: '상자 열기 3단계' }).click();
+  await expect(page.getByRole('dialog', { name: '물고기 발견 결과' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '나비고기' })).toBeVisible();
-  await expect(page.locator('.aquarium-result-ring')).toBeVisible();
-  await expect(page.locator('.aquarium-result-burst i')).toHaveCount(10);
+  await expect(page.locator('.aquarium-result-ring')).toHaveCount(2);
+  await expect(page.locator('.aquarium-result-burst i')).toHaveCount(22);
   await expect(page.locator('.aquarium-result-halo .fish-species-butterflyfish')).toBeVisible();
   const drawScreenshotPath = testInfo.outputPath('aquarium-draw-result-390.png');
   await page.screenshot({ path: drawScreenshotPath, fullPage: true });
@@ -638,9 +635,10 @@ test('물고기 뽑기는 미확인 결과를 복구하고 세 번 공개한 뒤
   await page.getByRole('button', { name: '수조로 돌아가기' }).click();
   await page.locator('[data-action="openAquariumShare"]').click();
   await expect(page.getByRole('heading', { name: '나의 공부 수조' })).toBeVisible();
-  await expect(page.locator('.aquarium-share-card')).toContainText('개인정보와 입시 성적은 공유 카드에 포함되지 않습니다.');
-  await page.getByRole('button', { name: '수조 공유하기' }).click();
-  await expect(page.getByText('수조 공유를 완료했어요.')).toBeVisible();
+  await expect(page.locator('.aquarium-share-card')).toContainText('위 이미지는 미리보기이며 전송되지 않아요.');
+  await expect(page.locator('.aquarium-share-view')).toContainText('성적이나 계정 정보 없이');
+  await page.getByRole('button', { name: '기록과 링크 공유' }).click();
+  await expect(page.getByText('기록과 링크 공유를 완료했어요.')).toBeVisible();
   const sharePayload = await page.evaluate(() => window.__aquariumSharePayloads.at(-1));
   expect(sharePayload.title).toBe('StudyCrack 공부 수조');
   expect(sharePayload.text).toContain('물고기 2/12종');

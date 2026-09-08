@@ -52,6 +52,10 @@ const deferredModuleSuffixes = [
   '/src/features/study/overview-presentation.js',
   '/src/app/presentation-context.js',
   '/src/components/aquarium/AquariumScene.jsx',
+  '/src/components/aquarium/AquariumBackground.jsx',
+  '/src/components/aquarium/aquarium-backgrounds.js',
+  '/src/handlers/aquarium-care-handlers.js',
+  '/src/screens/aquarium/use-care-effect.js',
   '/src/screens/aquarium/FishArtwork.jsx',
   '/src/features/gamification/fish-artwork.js',
   '/src/app/AppOverlayHost.jsx',
@@ -71,6 +75,10 @@ for (const suffix of deferredModuleSuffixes) {
 }
 
 const cssAsset = assets.find((asset) => asset.fileName === 'studycrack-mobile.css');
+const aquariumAssets = assets.filter(asset => /^assets\/day-\d+-[\w-]{8}\.png$/.test(asset.fileName));
+assert.equal(aquariumAssets.length, 6, 'exactly six hashed background images must be emitted');
+assert.deepEqual(aquariumAssets.map(asset => Number(asset.fileName.match(/day-(\d+)-/)[1])).sort((a, b) => a - b), [1, 7, 15, 30, 50, 100]);
+for (const asset of aquariumAssets) assert.doesNotMatch(entryChunk.code, new RegExp(asset.fileName), 'background URLs must stay outside the login entry');
 const deferredCssAsset = assets.find((asset) => /^chunks\/screen-registry-app-[\w-]+\.css$/.test(asset.fileName));
 assert.ok(cssAsset, 'stable mobile CSS asset must be emitted');
 assert.ok(deferredCssAsset, 'signed-in screen CSS must be emitted as a deferred hashed chunk');

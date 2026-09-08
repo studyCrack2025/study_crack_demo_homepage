@@ -46,8 +46,7 @@ assert.match(aquariumSource, /variant="grid"/, 'catalog and inventory must reque
 assert.match(sceneCss, /\.aquarium-fish-artwork/, 'shared scene CSS must own the bitmap artwork shell');
 assert.match(sceneCss, /\.aquarium-fish-path\{[^}]*animation:aquariumFishPath[^}]*ease-in-out/, 'aquarium movement must use continuous compositor interpolation');
 assert.doesNotMatch(sceneCss, /\.aquarium-fish\{[^}]*steps\(/, 'aquarium fish movement must not use coarse step timing');
-assert.doesNotMatch(sceneCss, /\.aquarium-bubbles i\{[^}]*steps\(/, 'aquarium bubbles must not use coarse step timing');
-assert.doesNotMatch(sceneCss, /\.aquarium-plants i\{[^}]*steps\(/, 'aquarium plants must not use coarse step timing');
+assert.doesNotMatch(sceneCss, /\.aquarium-(bubbles|plants|ground|rays|water-line)\b/, 'complete background artwork must not duplicate CSS scenery');
 assert.match(plannerCss, /\.aquarium-fish-artwork/, 'planner CSS must size the bitmap artwork shell');
 
 console.log('Fish artwork renderer contracts passed: 85 assets with pixel habitats, 7 fish-v1 mappings and SVG fallback.');

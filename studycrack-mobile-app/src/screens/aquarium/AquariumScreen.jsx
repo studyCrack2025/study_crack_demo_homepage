@@ -3,7 +3,7 @@ import { catalogMeta } from './aquarium-panel-shared.jsx';
 import { FishCarePanel } from './FishCarePanel.jsx';
 import { FishInventoryPanel } from './FishInventoryPanel.jsx';
 import { FishDexPanel } from './FishDexPanel.jsx';
-import { DiscoveryPanel } from './DiscoveryPanel.jsx';
+import { DiscoveryPanel, DiscoveryResult } from './DiscoveryPanel.jsx';
 import { AquariumSharePanel } from './AquariumSharePanel.jsx';
 import { AquariumScene } from '../../components/aquarium/AquariumScene.jsx';
 import { StudyOverviewCard } from '../../components/StudyOverviewCard.jsx';
@@ -13,6 +13,7 @@ import { Icon } from '../../components/Icon.jsx';
 import { StatusState } from '../../components/StatusState.js';
 import { FishArtwork } from './FishArtwork.jsx';
 import { buildAquariumJourneyPresentation } from './presentation.js';
+import { useCareEffect } from './use-care-effect.js';
 
 function AquariumHabitatHeader({ fishCount = 0, profile }) {
   return <header className="aquarium-habitat-header"><div><span>STUDYCRACK AQUARIUM</span><h1>나의 공부 수조</h1><p>집중한 시간이 물고기의 성장으로 남아요.</p></div><div className="aquarium-wallet" role="group" aria-label="수조 재화"><span>조개 <b>{Number(profile?.shellBalance) || 0}</b></span><span>먹이 <b>{Number(profile?.foodBalance) || 0}</b></span><small>{fishCount}마리와 함께하는 중</small></div></header>;
@@ -57,7 +58,6 @@ function AquariumWorkspace(ctx) {
     activeFish = [],
     aquariumActionError = '',
     aquariumActionStatus = 'idle',
-    aquariumDrawRevealStep = 0,
     aquariumMode = 'view',
     aquariumResult = null,
     aquariumSelectedFishId = '',
@@ -78,6 +78,19 @@ function AquariumWorkspace(ctx) {
     tab = 'aquarium'
   } = ctx;
   const [dexSelection, setDexSelection] = useState({ filter: 'all', category: 'all', expanded: false });
+  const [managementOpen, setManagementOpen] = useState(false);
+  const [nameDrafts, setNameDrafts] = useState({});
+  const careEffect = useCareEffect(aquariumResult, aquariumMode === 'view' && gameProfileStatus === 'ready');
+  const careBusy = ['feeding', 'renaming', 'updating-slot', 'uncertain', 'checking-care'].includes(aquariumActionStatus);
+  const careUncertain = aquariumResult?.type === 'care-uncertain';
+  useLayoutEffect(() => {
+    if (aquariumResult?.type !== 'rename') return;
+    setNameDrafts(drafts => {
+      const next = { ...drafts };
+      delete next[aquariumResult.fish.fishId];
+      return next;
+    });
+  }, [aquariumResult]);
   const rootRef = useRef(null);
   const positions = useRef({});
   const previousMode = useRef(aquariumMode);
@@ -100,14 +113,14 @@ function AquariumWorkspace(ctx) {
   const selectedFish = fishInventory.find((fish) => fish?.fishId === aquariumSelectedFishId) || activeFish.find((fish) => fish?.fishId === aquariumSelectedFishId) || activeFish.find(Boolean) || fishInventory[0] || null;
   const selectedMeta = catalogMeta(fishCatalog, selectedFish?.speciesId);
   const activeSlot = AQUARIUM_SLOTS.find((slot, index) => activeFish[index]?.fishId === selectedFish?.fishId)?.id || '';
-  const loading = gameProfileStatus === 'loading';
+  const loading = gameProfileStatus === 'loading' || gameProfileStatus === 'idle';
   const unavailable = gameProfileStatus === 'unavailable';
   const fatalError = gameProfileStatus === 'error' ? gameProfileError : '';
   const resourceWarnings = [fishCatalogStatus === 'error' ? fishCatalogError : '', pendingDrawStatus === 'error' ? pendingDrawError : ''].filter(Boolean);
   const snapshot = ctx.aquariumPresentation || buildAquariumPresentation({ activeFish, fishCatalog, fishCatalogStatus, fishInventory, fishCount, gameProfile, gameProfileStatus, todayPlannerItems });
 
   if (!unavailable && aquariumMode === 'catalog') return <AppScreenShell screen="aquarium" dimmed={dimmed}><main ref={rootRef} className="aquarium-screen aquarium-catalog-page"><AquariumOfflineState /><FishDexPanel selection={dexSelection} setSelection={setDexSelection} catalog={fishCatalog} error={fishCatalogError} inventory={fishInventory} profile={gameProfile} status={fishCatalogStatus} /></main></AppScreenShell>;
-  if (!unavailable && aquariumMode === 'draw') return <AppScreenShell screen="aquarium" tab={tab} dimmed={dimmed}><main ref={rootRef} className="aquarium-screen"><AquariumOfflineState /><DiscoveryPanel actionError={aquariumActionError} actionStatus={aquariumActionStatus} catalog={fishCatalog} pendingDraw={pendingDraw} pendingDrawError={pendingDrawError} pendingDrawStatus={pendingDrawStatus} profile={gameProfile} revealStep={aquariumDrawRevealStep} /></main></AppScreenShell>;
+  if (!unavailable && aquariumMode === 'draw') return <AppScreenShell screen="aquarium" tab={tab} dimmed={dimmed} overlayOpen={Boolean(pendingDraw)} overlays={pendingDraw ? <DiscoveryResult key={pendingDraw.result.requestId} actionError={aquariumActionError} actionStatus={aquariumActionStatus} catalog={fishCatalog} pendingDraw={pendingDraw} /> : null}><main ref={rootRef} className="aquarium-screen"><AquariumOfflineState /><DiscoveryPanel actionError={aquariumActionError} actionStatus={aquariumActionStatus} pendingDrawError={pendingDrawError} pendingDrawStatus={pendingDrawStatus} profile={gameProfile} /></main></AppScreenShell>;
   if (!unavailable && aquariumMode === 'share') return <AppScreenShell screen="aquarium" tab={tab} dimmed={dimmed}><main ref={rootRef} className="aquarium-screen"><AquariumOfflineState /><AquariumSharePanel actionError={aquariumActionError} actionStatus={aquariumActionStatus} catalog={fishCatalog} snapshot={snapshot} result={aquariumResult} /></main></AppScreenShell>;
 
   return (
@@ -115,16 +128,17 @@ function AquariumWorkspace(ctx) {
       <main ref={rootRef} className="aquarium-screen">
         <AquariumOfflineState />
         <AquariumHabitatHeader fishCount={fishCount || fishInventory.length} profile={gameProfile} />
-        {gameProfileStatus === 'ready' && gameProfile ? <AquariumJourney fishCount={fishCount || fishInventory.length} profile={gameProfile} /> : null}
         {loading ? <StatusState className="aquarium-main-status" kind="loading" title="수조를 채우고 있어요" description="보상과 물고기 상태를 확인하고 있습니다." /> : unavailable ? <div className="aquarium-error sc-card" role="status"><b>수조를 순차적으로 열고 있어요</b><p>{gameProfileError || '계정별 적용이 완료되면 이곳에서 바로 확인할 수 있습니다.'}</p><button type="button" className="btn btn-primary" data-action="goto" data-target="timer">타이머로 돌아가기</button></div> : fatalError ? <div className="aquarium-error sc-card" role="alert"><b>수조를 불러오지 못했어요</b><p>{fatalError}</p><button type="button" className="btn btn-primary" data-action="retryGameResources">다시 불러오기</button></div> : <>
           <StudyOverviewCard overview={ctx.studyOverview} />
-          <div className="aquarium-scene-wrap"><AquariumScene slots={snapshot.slots} catalog={fishCatalog} stats={snapshot} selectedFishId={selectedFish?.fishId || ''} /></div>
+          <div className="aquarium-scene-wrap"><AquariumScene backgroundKey={snapshot.backgroundKey} slots={snapshot.slots} catalog={fishCatalog} stats={snapshot} selectedFishId={selectedFish?.fishId || ''} careEffect={careEffect} controlsDisabled={careBusy} /></div>
+          {gameProfileStatus === 'ready' && gameProfile ? <AquariumJourney fishCount={fishCount || fishInventory.length} profile={gameProfile} /> : null}
+          {careUncertain ? <section className="aquarium-care-recovery" role="status"><b>처리 결과 확인이 필요해요</b><p>{aquariumActionError}</p><button type="button" className="btn btn-secondary" data-action="retryGameResources" disabled={aquariumActionStatus === 'checking-care'}>{aquariumActionStatus === 'checking-care' ? '상태 확인 중...' : '현재 상태 확인'}</button><small>이 버튼은 먹이를 주거나 배치를 변경하지 않아요.</small></section> : aquariumResult?.type === 'care-checked' ? <section className="aquarium-care-recovery" role="status"><b>현재 먹이와 물고기 상태를 불러왔어요</b><p>이전 요청의 성공 여부를 확정한 것은 아니에요. 표시된 상태를 확인한 뒤 다음 동작을 선택해주세요.</p><button type="button" className="btn btn-secondary" data-action="dismissAquariumResult">확인</button></section> : null}
           {resourceWarnings.length ? <div className="aquarium-resource-notice" role="status"><span><b>일부 정보를 불러오지 못했어요</b><small>{resourceWarnings[0]}</small></span><button type="button" data-action="retryGameResources">다시 시도</button></div> : null}
           {gameProfile?.starterState === 'selectable' ? <StarterPanel actionError={aquariumActionError} actionStatus={aquariumActionStatus} catalog={fishCatalog} selectedSpeciesId={aquariumStarterSpeciesId} /> : null}
           {gameProfile?.starterState === 'locked' ? <LockedStarterPanel /> : null}
-          {gameProfile?.starterState === 'claimed' ? <FishCarePanel actionError={aquariumActionError} actionStatus={aquariumActionStatus} activeSlot={activeSlot} fish={selectedFish} foodBalance={Number(gameProfile?.foodBalance) || 0} meta={selectedMeta} result={aquariumResult} /> : null}
-          {gameProfile?.starterState === 'claimed' ? <FishInventoryPanel actionError={aquariumActionError} actionStatus={aquariumActionStatus} activeFish={activeFish} catalog={fishCatalog} inventory={fishInventory} result={aquariumResult} selectedFish={selectedFish} /> : null}
-          <section className="aquarium-next-actions"><button type="button" data-action="goto" data-target="timer"><Icon name="timer" /><span><b>공부해서 먹이 모으기</b><small>타이머로 이동</small></span><i aria-hidden="true">›</i></button><button type="button" data-action="openAquariumCatalog"><Icon name="report" /><span><b>물고기 도감</b><small>{aquariumCollectionLabel(snapshot)}</small></span><i aria-hidden="true">›</i></button><button type="button" data-action="openAquariumDraw" disabled={gameProfile?.starterState !== 'claimed'}><Icon name="plus" /><span><b>{pendingDraw ? '뽑기 결과 확인' : '새 물고기 만나기'}</b><small>{pendingDraw ? '확인하지 않은 결과가 있어요' : '조개 30개 사용'}</small></span><i aria-hidden="true">›</i></button><button type="button" data-action="openAquariumShare" disabled={!fishInventory.length}><Icon name="share" /><span><b>수조 공유하기</b><small>성적 없이 공부 기록만</small></span><i aria-hidden="true">›</i></button></section>
+          {gameProfile?.starterState === 'claimed' ? <FishCarePanel actionError={careUncertain ? '' : aquariumActionError} actionStatus={aquariumActionStatus} activeSlot={activeSlot} fish={selectedFish} foodBalance={Number(gameProfile?.foodBalance) || 0} meta={selectedMeta} result={aquariumResult} /> : null}
+          {gameProfile?.starterState === 'claimed' ? <details className="aquarium-management" open={managementOpen} onToggle={event => setManagementOpen(event.currentTarget.open)}><summary>이름·배치 관리 <span>{managementOpen ? '접기' : '펼치기'}</span></summary><FishInventoryPanel actionStatus={aquariumActionStatus} activeFish={activeFish} catalog={fishCatalog} inventory={fishInventory} result={aquariumResult} selectedFish={selectedFish} nameDraft={nameDrafts[selectedFish?.fishId]} onNameChange={(fishId, value) => setNameDrafts(drafts => ({ ...drafts, [fishId]: value }))} /></details> : null}
+          <section className="aquarium-next-actions"><button type="button" data-action="goto" data-target="timer"><Icon name="timer" /><span><b>공부해서 먹이 모으기</b><small>타이머로 이동</small></span><i aria-hidden="true">›</i></button><button type="button" data-action="openAquariumCatalog" disabled={careBusy}><Icon name="report" /><span><b>물고기 도감</b><small>{aquariumCollectionLabel(snapshot)}</small></span><i aria-hidden="true">›</i></button><button type="button" data-action="openAquariumDraw" disabled={careBusy || gameProfile?.starterState !== 'claimed'}><Icon name="plus" /><span><b>{pendingDraw ? '뽑기 결과 확인' : '새 물고기 만나기'}</b><small>{pendingDraw ? '확인하지 않은 결과가 있어요' : '조개 30개 사용'}</small></span><i aria-hidden="true">›</i></button><button type="button" data-action="openAquariumShare" disabled={careBusy || !fishInventory.length}><Icon name="share" /><span><b>수조 공유하기</b><small>성적 없이 공부 기록만</small></span><i aria-hidden="true">›</i></button></section>
         </>}
       </main>
     </AppScreenShell>

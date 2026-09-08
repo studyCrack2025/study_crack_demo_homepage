@@ -40,6 +40,14 @@ for (const [width, height] of [[320, 700], [360, 800], [390, 844], [430, 932]]) 
     await expect(page.locator('.aquarium-share-stats')).toContainText('3 / 12종');
     await expect(scene.locator('.aquarium-fish-artwork')).toHaveClass(/is-loaded/);
     await capture('share');
+    await page.screenshot({ path: testInfo.outputPath(`share-page-${width}.png`), fullPage: true, animations: 'disabled' });
+    const submit = page.locator('[data-action="shareAquarium"]');
+    await submit.evaluate(el => el.scrollIntoView({ block: 'center' }));
+    await expect(submit).toBeInViewport({ ratio: 1 });
+    const buttonBox = await submit.boundingBox();
+    const navBox = await page.getByRole('navigation').boundingBox();
+    expect(buttonBox.y + buttonBox.height).toBeLessThanOrEqual(navBox.y);
+    await page.screenshot({ path: testInfo.outputPath(`share-controls-${width}.png`), animations: 'disabled' });
     await expectNoHorizontalOverflow(page);
   });
 }
@@ -66,7 +74,7 @@ test('보유 세 마리와 수집 한 종을 구분하고 공유에서도 같은
   await expect(page.locator('.aquarium-share-stats')).toContainText('3마리');
   await expect(page.locator('.aquarium-scene-hud')).toContainText('7일');
   await page.locator('[data-action="shareAquarium"]').click();
-  await expect(page.getByText('수조 공유를 완료했어요.')).toBeVisible();
+  await expect(page.getByText('기록과 링크 공유를 완료했어요.')).toBeVisible();
   const payloads = await page.evaluate(() => window.__aquariumSharePayloads);
   expect(payloads).toHaveLength(1);
   expect(payloads[0].text).toBe('공부로 키운 나의 수조: 물고기 1/2종 · 연속 학습 7일');

@@ -31,7 +31,8 @@ test('화면 진입은 한 번만 움직이고 수조의 국소 모션은 독립
   await page.locator('.tabbar [data-tab="aquarium"]').click();
   await expect(page.locator('.aquarium-fish-path').first()).toHaveCSS('animation-name', 'aquariumFishPath');
   await expect(page.locator('.aquarium-fish-path').first()).toHaveCSS('animation-iteration-count', 'infinite');
-  await expect(page.locator('.aquarium-bubbles i').first()).toHaveCSS('animation-duration', '7.4s');
+  await expect(page.locator('.aquarium-bubbles')).toHaveCount(0);
+  await expect(page.locator('.aquarium-scene-background')).toHaveCSS('animation-name', 'none');
 });
 
 test('팝업 형태별 진입 모션과 메뉴 눌림은 기본 모션과 분리된다', async ({ page }) => {
@@ -75,17 +76,14 @@ test('모션 줄이기에서도 화면·팝업·수조·메뉴의 상태 전환�
   await sheet.press('Escape');
   await page.locator('.tabbar [data-tab="aquarium"]').click();
   await expect(page.locator('.aquarium-fish-path').first()).toHaveCSS('animation-name', 'none');
-  await expect(page.locator('.aquarium-bubbles i').first()).toHaveCSS('animation-name', 'none');
+  await expect(page.locator('.aquarium-scene-background')).toHaveCSS('animation-name', 'none');
   await expect(page.locator('.tabbar [data-tab="aquarium"]')).toHaveAttribute('aria-current', 'page');
   await expect(page.locator('.tabbar [data-tab="aquarium"] .tabbar-icon')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, -9)');
   await page.locator('[data-action="openAquariumDraw"]').click();
   await page.getByRole('button', { name: '조개 30개로 만나기' }).click();
-  for (const step of [1, 2, 3]) {
-    await expect(page.locator('.aquarium-draw-box .aquarium-chest')).toHaveCSS('animation-name', 'none');
-    await page.getByRole('button', { name: `상자 열기 ${step}단계` }).click();
-  }
+  await expect(page.getByRole('dialog', { name: '물고기 발견 결과' })).toHaveCSS('animation-name', 'none');
   await expect(page.getByRole('heading', { name: '나비고기' })).toBeVisible();
-  await expect(page.locator('.aquarium-result-ring')).toHaveCSS('animation-name', 'none');
+  await expect(page.locator('.aquarium-result-ring').first()).toHaveCSS('animation-name', 'none');
   await expect(page.locator('.aquarium-result-burst i').first()).toHaveCSS('animation-name', 'none');
   await page.getByRole('button', { name: '도감에서 확인하기' }).click();
   await expect(page.getByRole('heading', { name: '물고기 도감' })).toBeVisible();
